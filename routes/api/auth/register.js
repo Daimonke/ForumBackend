@@ -53,6 +53,7 @@ router.post("/", async (req, res) => {
       .json({
         success: true,
         message: "User created successfully",
+        id: result.insertId,
       });
   } catch (error) {
     return res.json({
