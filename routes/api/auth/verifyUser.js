@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    const authed = isAuthed(req);
+    const authed = await isAuthed(req);
     if (authed) {
       return res.json({
         success: true,
