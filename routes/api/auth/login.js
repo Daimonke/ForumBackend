@@ -43,7 +43,8 @@ router.post("/", async (req, res) => {
     return res
       .cookie("token", token, {
         httpOnly: true,
-        maxAge: 100 * 60 * 60 * 24 * 30,
+        // maxAge 30 days
+        maxAge: 1000 * 60 * 60 * 24 * 30,
         sameSite: "strict",
       })
       .json({

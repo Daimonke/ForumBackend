@@ -13,7 +13,7 @@ router.get("/", async (req, res) => {
         id: req.token.id,
       });
     } else {
-      return res.status(401).json({
+      return res.status(201).json({
         success: false,
         message: "Unauthorized",
       });
