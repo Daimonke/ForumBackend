@@ -11,6 +11,7 @@ router.get("/", async (req, res) => {
         success: true,
         username: req.token.username,
         id: req.token.id,
+        avatar: req.token.avatar,
       });
     } else {
       return res.status(201).json({

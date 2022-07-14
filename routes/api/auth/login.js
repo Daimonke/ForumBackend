@@ -35,7 +35,7 @@ router.post("/", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user[0].id, username: user[0].username },
+      { id: user[0].id, username: user[0].username, avatar: user[0].avatar },
       process.env.JWT_SECRET,
       { expiresIn: "30d" }
     );
@@ -51,6 +51,8 @@ router.post("/", async (req, res) => {
         success: true,
         message: "User logged in successfully",
         id: user[0].id,
+        username: user[0].username,
+        avatar: user[0].avatar,
       });
   } catch (error) {
     return res.json({
