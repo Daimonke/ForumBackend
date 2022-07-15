@@ -12,7 +12,8 @@ router.get("/", async (req, res) => {
       `
     SELECT posts.*, username, avatar, (SELECT COUNT(user_id) FROM posts WHERE user_id = users.id) AS userPostsCount, 
     (SELECT COUNT(*) from postsRating where posts.id = postsRating.post_id AND postsRating.vote = 1) AS upvotes,
-    (SELECT COUNT(*) from postsRating where posts.id = postsRating.post_id AND postsRating.vote = 0) AS downvotes
+    (SELECT COUNT(*) from postsRating where posts.id = postsRating.post_id AND postsRating.vote = 0) AS downvotes,
+    (SELECT COUNT(*) from comments where comments.post_id = posts.id) AS comments
     ${
       req.token?.id
         ? ", (SELECT vote from postsRating where posts.id = postsRating.post_id AND postsRating.user_id = ?) AS userVoted"
@@ -24,7 +25,6 @@ router.get("/", async (req, res) => {
     `,
       [req.token?.id]
     );
-
     const data = posts.map((item) => {
       return {
         post: {
@@ -35,6 +35,7 @@ router.get("/", async (req, res) => {
           created_at: item.created_at,
           postVotes: item.upvotes - item.downvotes,
           userVoted: item.userVoted,
+          comments: item.comments,
         },
         user: {
           username: item.username,
@@ -43,12 +44,13 @@ router.get("/", async (req, res) => {
         },
       };
     });
-
+    console.log(data);
     res.json({
       success: true,
       posts: data,
     });
   } catch (error) {
+    console.log(error);
     return res.json({
       success: false,
       message: error.message,

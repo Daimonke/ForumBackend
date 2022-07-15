@@ -7,6 +7,8 @@ import verifyRouter from "./routes/api/auth/verifyUser.js";
 import logoutRouter from "./routes/api/auth/logout.js";
 import postsRouter from "./routes/api/content/posts.js";
 import voteRouter from "./routes/api/content/vote.js";
+import commentsRouter from "./routes/api/content/comments.js";
+import commentsVoteRouter from "./routes/api/content/commentsVote.js";
 import cookieParser from "cookie-parser";
 
 const PORT = process.env.PORT || 3020;
@@ -27,6 +29,8 @@ app.use("/auth/login", loginRouter);
 app.use("/auth/logout", logoutRouter);
 app.use("/content/posts", postsRouter);
 app.use("/content/vote", voteRouter);
+app.use("/content/comments", commentsRouter);
+app.use("/content/commentsVote", commentsVoteRouter);
 
 app.listen(PORT, () =>
   console.log(`Server running at: http://localhost:${PORT}`)
