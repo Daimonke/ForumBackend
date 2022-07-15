@@ -11,8 +11,6 @@ const default_avatar =
 router.post("/", async (req, res) => {
   try {
     const { password, confirmPassword } = req.body;
-    const username =
-      req.body.username[0].toUpperCase() + req.body.username.slice(1);
 
     if (password !== confirmPassword) {
       return res.status(400).json({
@@ -21,12 +19,15 @@ router.post("/", async (req, res) => {
       });
     }
 
-    if (username.length < 4 || password.length < 4) {
+    if (req.body.username.length < 4 || password.length < 4) {
       return res.status(400).json({
         success: false,
         message: "Username and password must be at least 4 characters long",
       });
     }
+
+    const username =
+      req.body.username[0].toUpperCase() + req.body.username.slice(1);
 
     const [user] = await con.query(`SELECT * FROM users WHERE username = ?`, [
       username,
