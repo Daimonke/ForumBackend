@@ -13,8 +13,10 @@ router.get("/:id", async (req, res) => {
         (SELECT COUNT(*) from commentsRating where comments.id = commentsRating.comment_id AND commentsRating.vote = 1) AS upvotes,
         (SELECT COUNT(*) from commentsRating where comments.id = commentsRating.comment_id AND commentsRating.vote = 0) AS downvotes
         ${
-          req.token?.id
-            ? ", (SELECT vote from commentsRating where comments.id = commentsRating.comment_id AND commentsRating.user_id = ?) AS userVoted"
+          authed
+            ? `, (SELECT vote from commentsRating where comments.id = commentsRating.comment_id AND commentsRating.user_id = ${con.escape(
+                req.token.id
+              )}) AS userVoted`
             : ""
         }
         FROM comments
@@ -22,27 +24,29 @@ router.get("/:id", async (req, res) => {
         WHERE comments.post_id = ?
         ORDER BY comments.created_at DESC
         `,
-      [req.token?.id, req.params.id]
+      [req.params.id]
     );
-    const data = comment.map((item) => {
-      return {
-        comment: {
-          id: item.id,
-          post_id: item.post_id,
-          user_id: item.user_id,
-          comment: item.comment,
-          created_at: item.created_at,
-          commentVotes: item.upvotes - item.downvotes,
-          userVoted: item.userVoted,
-        },
-        user: {
-          id: item.user_id,
-          username: item.username,
-          avatar: item.avatar,
-          userPostsCount: item.userPostsCount,
-        },
-      };
-    });
+    const data = comment
+      .map((item) => {
+        return {
+          comment: {
+            id: item.id,
+            post_id: item.post_id,
+            user_id: item.user_id,
+            comment: item.comment,
+            created_at: item.created_at,
+            commentVotes: item.upvotes - item.downvotes,
+            userVoted: item.userVoted,
+          },
+          user: {
+            id: item.user_id,
+            username: item.username,
+            avatar: item.avatar,
+            userPostsCount: item.userPostsCount,
+          },
+        };
+      })
+      .sort((a, b) => b.comment.commentVotes - a.comment.commentVotes);
 
     res.json({
       success: true,
@@ -57,41 +61,42 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// router.post("/", async (req, res) => {
-//   try {
-//     const authed = await isAuthed(req);
+router.post("/", async (req, res) => {
+  try {
+    const authed = await isAuthed(req);
 
-//     if (!authed) {
-//       return res.status(401).json({
-//         success: false,
-//         message: "You must be logged in to create a post",
-//       });
-//     }
+    if (!authed) {
+      return res.status(401).json({
+        success: false,
+        message: "You must be logged in to create a post",
+      });
+    }
 
-//     const { title, content } = req.body;
+    const { post_id, comment } = req.body;
 
-//     if (!title || !content) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Title and content are required",
-//       });
-//     }
+    if (!post_id || !comment) {
+      return res.status(400).json({
+        success: false,
+        message: "Comment is empty!",
+      });
+    }
+    const created_at = new Date().toLocaleString("LT");
+    const [data] = await con.query(
+      `INSERT INTO comments (user_id, post_id, comment, created_at) VALUES (?, ?, ?, ?)`,
+      [req.token.id, post_id, comment, created_at]
+    );
 
-//     const [result] = await con.query(
-//       `INSERT INTO posts (user_id, title, content, created_at) VALUES (?, ?, ?, ?)`,
-//       [req.token.id, title, content, new Date().toLocaleString("LT")]
-//     );
-
-//     res.json({
-//       success: true,
-//       inserted_id: result.insertId,
-//     });
-//   } catch (error) {
-//     return res.json({
-//       success: false,
-//       message: error.message,
-//     });
-//   }
-// });
+    res.json({
+      success: true,
+      inserted_id: data.insertId,
+      created_at: created_at,
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
 
 export default router;

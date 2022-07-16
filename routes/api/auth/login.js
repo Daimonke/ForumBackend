@@ -16,9 +16,11 @@ router.post("/", async (req, res) => {
       });
     }
 
-    const [user] = await con.query(`SELECT * FROM users WHERE username = ?`, [
-      username,
-    ]);
+    const [user] = await con.query(
+      `SELECT *, (SELECT COUNT(user_id) FROM posts WHERE user_id = users.id) AS userPostsCount
+       FROM users WHERE username = ?`,
+      [username]
+    );
     if (user.length <= 0) {
       return res.status(400).json({
         success: false,
@@ -53,6 +55,7 @@ router.post("/", async (req, res) => {
         id: user[0].id,
         username: user[0].username,
         avatar: user[0].avatar,
+        userPostsCount: user[0].userPostsCount,
       });
   } catch (error) {
     return res.json({

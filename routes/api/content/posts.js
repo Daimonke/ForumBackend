@@ -44,7 +44,6 @@ router.get("/", async (req, res) => {
         },
       };
     });
-    console.log(data);
     res.json({
       success: true,
       posts: data,
