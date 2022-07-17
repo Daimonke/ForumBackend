@@ -47,8 +47,8 @@ router.post("/", async (req, res) => {
         httpOnly: true,
         // maxAge 30 days
         maxAge: 1000 * 60 * 60 * 24 * 30,
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // must be 'none' to enable cross-site delivery
-        secure: process.env.NODE_ENV === "production", // must be true if sameSite='none'
+        sameSite: "none", // must be 'none' to enable cross-site delivery
+        secure: true, // must be true if sameSite='none'
       })
       .json({
         success: true,
