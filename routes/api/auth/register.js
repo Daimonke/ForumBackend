@@ -5,9 +5,12 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
+const default_avatar =
+  "https://www.business2community.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640.png";
+
 router.post("/", async (req, res) => {
   try {
-    const { username, password, confirmPassword } = req.body;
+    const { password, confirmPassword } = req.body;
 
     if (password !== confirmPassword) {
       return res.status(400).json({
@@ -16,12 +19,15 @@ router.post("/", async (req, res) => {
       });
     }
 
-    if (username.length < 4 || password.length < 4) {
+    if (req.body.username.length < 4 || password.length < 4) {
       return res.status(400).json({
         success: false,
         message: "Username and password must be at least 4 characters long",
       });
     }
+
+    const username =
+      req.body.username[0].toUpperCase() + req.body.username.slice(1);
 
     const [user] = await con.query(`SELECT * FROM users WHERE username = ?`, [
       username,
@@ -35,11 +41,11 @@ router.post("/", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const [result] = await con.query(
-      `INSERT INTO users (username, password) VALUES (?, ?)`,
-      [username, hashedPassword]
+      `INSERT INTO users (username, password, avatar) VALUES (?, ?, ?)`,
+      [username, hashedPassword, default_avatar]
     );
     const token = jwt.sign(
-      { id: result.insertId, username: username },
+      { id: result.insertId, username: username, avatar: default_avatar },
       process.env.JWT_SECRET,
       { expiresIn: "30d" }
     );
@@ -47,13 +53,17 @@ router.post("/", async (req, res) => {
     return res
       .cookie("token", token, {
         httpOnly: true,
-        maxAge: 100 * 60 * 60 * 24 * 30,
+        // maxAge 30 days
+        maxAge: 1000 * 60 * 60 * 24 * 30,
         sameSite: "strict",
       })
       .json({
         success: true,
         message: "User created successfully",
         id: result.insertId,
+        username: username,
+        avatar: default_avatar,
+        userPostsCount: 0,
       });
   } catch (error) {
     return res.json({
