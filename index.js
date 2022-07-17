@@ -18,7 +18,7 @@ const corsOptions = {
   credentials: true,
   origin:
     process.env.NODE_ENV === "production"
-      ? "https://daimonke-forum.herokuapp.com"
+      ? "https://daimonke.github.io"
       : "http://localhost:3000",
 };
 
