@@ -99,4 +99,107 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.delete("/:id", async (req, res) => {
+  try {
+    const authed = await isAuthed(req);
+
+    if (!authed) {
+      return res.status(401).json({
+        success: false,
+        message: "You must be logged in to delete a post",
+      });
+    }
+
+    const [comment] = await con.query(`SELECT * FROM comments WHERE id = ?`, [
+      req.params.id,
+    ]);
+
+    if (!comment.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Comment not found",
+      });
+    }
+
+    if (comment[0].user_id !== req.token.id) {
+      return res.status(401).json({
+        success: false,
+        message: "You can only delete your own comments",
+      });
+    }
+
+    await con.query(`DELETE FROM comments WHERE id = ?`, [req.params.id]);
+
+    res.json({
+      success: true,
+      message: "Comment deleted",
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+router.patch("/:id", async (req, res) => {
+  try {
+    const authed = await isAuthed(req);
+
+    if (!authed) {
+      return res.status(401).json({
+        success: false,
+        message: "You must be logged in to edit a post",
+      });
+    }
+
+    const [comment] = await con.query(`SELECT * FROM comments WHERE id = ?`, [
+      req.params.id,
+    ]);
+
+    if (!comment.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Comment not found",
+      });
+    }
+
+    if (comment[0].user_id !== req.token.id) {
+      return res.status(401).json({
+        success: false,
+        message: "You can only edit your own comments",
+      });
+    }
+
+    const { comment: newComment } = req.body;
+
+    if (!newComment) {
+      return res.status(400).json({
+        success: false,
+        message: "Comment is empty!",
+      });
+    }
+
+    await con.query(
+      `UPDATE comments SET comment = ?
+       ${
+         comment[0].original_comment === null
+           ? `, original_comment = ${con.escape(comment[0].comment)}`
+           : ""
+       } WHERE id = ?`,
+      [newComment, req.params.id]
+    );
+
+    res.json({
+      success: true,
+      message: "Comment updated",
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
 export default router;
