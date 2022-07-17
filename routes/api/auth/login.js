@@ -42,22 +42,15 @@ router.post("/", async (req, res) => {
       { expiresIn: "30d" }
     );
 
-    return res
-      .cookie("token", token, {
-        httpOnly: true,
-        // maxAge 30 days
-        maxAge: 1000 * 60 * 60 * 24 * 30,
-        sameSite: "none", // must be 'none' to enable cross-site delivery
-        secure: true, // must be true if sameSite='none'
-      })
-      .json({
-        success: true,
-        message: "User logged in successfully",
-        id: user[0].id,
-        username: user[0].username,
-        avatar: user[0].avatar,
-        userPostsCount: user[0].userPostsCount,
-      });
+    res.json({
+      success: true,
+      message: "User logged in successfully",
+      id: user[0].id,
+      username: user[0].username,
+      avatar: user[0].avatar,
+      userPostsCount: user[0].userPostsCount,
+      token: token,
+    });
   } catch (error) {
     return res.json({
       success: false,

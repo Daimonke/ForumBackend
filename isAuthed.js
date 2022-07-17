@@ -1,13 +1,15 @@
 import jwt from "jsonwebtoken";
 
 export default async function isAuthed(req) {
-  if (req.cookies.token) {
-    const token = req.cookies.token;
+  if (req.headers.authorization) {
+    const token = req.headers.authorization.split(" ")[1];
+    console.log(token);
     const bool = jwt.verify(token, process.env.JWT_SECRET, (err, result) => {
       if (err) return false;
       req.token = result;
       return true;
     });
+    console.log(bool);
     return bool;
   } else {
     return false;
