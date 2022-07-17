@@ -99,4 +99,47 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.delete("/:id", async (req, res) => {
+  try {
+    const authed = await isAuthed(req);
+
+    if (!authed) {
+      return res.status(401).json({
+        success: false,
+        message: "You must be logged in to delete a post",
+      });
+    }
+
+    const [comment] = await con.query(`SELECT * FROM comments WHERE id = ?`, [
+      req.params.id,
+    ]);
+
+    if (!comment.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Comment not found",
+      });
+    }
+
+    if (comment[0].user_id !== req.token.id) {
+      return res.status(401).json({
+        success: false,
+        message: "You can only delete your own comments",
+      });
+    }
+
+    await con.query(`DELETE FROM comments WHERE id = ?`, [req.params.id]);
+
+    res.json({
+      success: true,
+      message: "Comment deleted",
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
 export default router;
