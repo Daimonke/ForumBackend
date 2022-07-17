@@ -18,7 +18,7 @@ const corsOptions = {
   credentials: true,
   origin:
     process.env.NODE_ENV === "production"
-      ? "https://daimonke.github.io"
+      ? "https://daimoforum.netlify.app"
       : "http://localhost:3000",
 };
 
