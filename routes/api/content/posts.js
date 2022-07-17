@@ -15,7 +15,7 @@ router.get("/", async (req, res) => {
     (SELECT COUNT(*) from postsRating where posts.id = postsRating.post_id AND postsRating.vote = 0) AS downvotes,
     (SELECT COUNT(*) from comments where comments.post_id = posts.id) AS comments
     ${
-      req.token?.id
+      authed
         ? ", (SELECT vote from postsRating where posts.id = postsRating.post_id AND postsRating.user_id = ?) AS userVoted"
         : ""
     } 
