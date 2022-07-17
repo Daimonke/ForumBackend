@@ -16,7 +16,10 @@ const app = express();
 
 const corsOptions = {
   credentials: true,
-  origin: "http://localhost:3000",
+  origin:
+    process.env.NODE_ENV === "production"
+      ? "https://daimonke-forum.herokuapp.com"
+      : "http://localhost:3000",
 };
 
 app.use(cors(corsOptions));
