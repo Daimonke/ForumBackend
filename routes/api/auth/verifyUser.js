@@ -7,7 +7,6 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const authed = await isAuthed(req);
-
     if (authed) {
       const [data] = await con.query(
         `SELECT COUNT(user_id) AS userPostsCount FROM posts WHERE user_id = ?`,
