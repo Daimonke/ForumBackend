@@ -37,6 +37,7 @@ router.get("/:id", async (req, res) => {
             created_at: item.created_at,
             commentVotes: item.upvotes - item.downvotes,
             userVoted: item.userVoted,
+            original_comment: item.original_comment,
           },
           user: {
             id: item.user_id,
