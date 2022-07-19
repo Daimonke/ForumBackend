@@ -7,6 +7,9 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const authed = await isAuthed(req);
+
+    const { sort, display } = req.query;
+
     // get all posts from db and send them
     const [posts] = await con.query(
       `
@@ -16,14 +19,22 @@ router.get("/", async (req, res) => {
     (SELECT COUNT(*) from comments where comments.post_id = posts.id) AS comments
     ${
       authed
-        ? ", (SELECT vote from postsRating where posts.id = postsRating.post_id AND postsRating.user_id = ?) AS userVoted"
+        ? `, (SELECT vote from postsRating where posts.id = postsRating.post_id AND postsRating.user_id = ${con.escape(
+            req.token.id
+          )}) AS userVoted`
         : ""
     } 
     FROM posts
     JOIN users ON users.id = posts.user_id
-    ORDER BY posts.created_at DESC
-    `,
-      [req.token?.id]
+    ${
+      display && req.token
+        ? `WHERE posts.user_id = ${con.escape(req.token.id)}`
+        : ""
+    }
+    ${sort === "comments" ? `ORDER BY comments DESC` : ""}
+    ${sort === "created_at" ? `ORDER BY created_at DESC` : ""}
+    ${!sort ? "ORDER BY posts.created_at DESC" : ""}
+    `
     );
     const data = posts.map((item) => {
       return {
