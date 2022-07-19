@@ -36,6 +36,8 @@ router.get("/", async (req, res) => {
           postVotes: item.upvotes - item.downvotes,
           userVoted: item.userVoted,
           comments: item.comments,
+          original_content: item.original_content,
+          original_title: item.original_title,
         },
         user: {
           username: item.username,
@@ -85,6 +87,103 @@ router.post("/", async (req, res) => {
     res.json({
       success: true,
       inserted_id: result.insertId,
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+router.patch("/:id", async (req, res) => {
+  try {
+    const authed = await isAuthed(req);
+
+    if (!authed) {
+      return res.status(401).json({
+        success: false,
+        message: "You must be logged in to edit a post",
+      });
+    }
+
+    const { title, content } = req.body;
+
+    if (!title || !content) {
+      return res.status(400).json({
+        success: false,
+        message: "Title and content are required",
+      });
+    }
+
+    const [post] = await con.query(`SELECT * FROM posts WHERE id = ?`, [
+      req.params.id,
+    ]);
+    if (req.token.id !== post[0].user_id) {
+      return res.status(401).json({
+        success: false,
+        message: "You can only edit your own posts",
+      });
+    }
+
+    const { original_content, original_title } = post[0];
+    console.log("post", post);
+    const [result] = await con.query(
+      `UPDATE posts SET title = ?, content = ?
+      ${
+        original_title === null && post[0].title !== title
+          ? `, original_title = ${con.escape(post[0].title)}`
+          : ""
+      }
+          ${
+            original_content === null && post[0].content !== content
+              ? `, original_content = ${con.escape(post[0].content)}`
+              : ""
+          }
+       WHERE id = ?`,
+      [title, content, req.params.id]
+    );
+    console.log("result", result);
+    res.json({
+      success: true,
+      message: "Post updated",
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const authed = await isAuthed(req);
+
+    if (!authed) {
+      return res.status(401).json({
+        success: false,
+        message: "You must be logged in to delete a post",
+      });
+    }
+
+    const [post] = await con.query(`SELECT * FROM posts WHERE id = ?`, [
+      req.params.id,
+    ]);
+    if (req.token.id !== post[0].user_id) {
+      return res.status(401).json({
+        success: false,
+        message: "You can only delete your own posts",
+      });
+    }
+
+    const [result] = await con.query(`DELETE FROM posts WHERE id = ?`, [
+      req.params.id,
+    ]);
+
+    res.json({
+      success: true,
+      message: "Post deleted",
     });
   } catch (error) {
     return res.json({

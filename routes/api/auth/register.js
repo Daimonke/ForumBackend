@@ -5,9 +5,6 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
-const default_avatar =
-  "https://www.business2community.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640.png";
-
 router.post("/", async (req, res) => {
   try {
     const { password, confirmPassword } = req.body;
@@ -39,13 +36,16 @@ router.post("/", async (req, res) => {
       });
     }
 
+    // random avatar api url
+    const avatar = `https://avatars.dicebear.com/api/bottts/${username}.svg`;
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const [result] = await con.query(
       `INSERT INTO users (username, password, avatar) VALUES (?, ?, ?)`,
-      [username, hashedPassword, default_avatar]
+      [username, hashedPassword, avatar]
     );
     const token = jwt.sign(
-      { id: result.insertId, username: username, avatar: default_avatar },
+      { id: result.insertId, username: username, avatar: avatar },
       process.env.JWT_SECRET,
       { expiresIn: "30d" }
     );
@@ -55,7 +55,7 @@ router.post("/", async (req, res) => {
       message: "User created successfully",
       id: result.insertId,
       username: username,
-      avatar: default_avatar,
+      avatar: avatar,
       userPostsCount: 0,
       token: token,
     });
