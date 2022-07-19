@@ -63,7 +63,7 @@ router.patch("/:id", async (req, res) => {
       `
     UPDATE postsRating SET vote = ? WHERE post_id = ? AND user_id = ?
     `,
-      [req.query.vote, id, req.token.id]
+      [req.body.vote, id, req.token.id]
     );
 
     return res.status(200).json({
